@@ -142,21 +142,63 @@ const Index = () => {
             </div>
 
             <div className="flex items-center justify-center">
-              <div className="relative w-64 h-64">
-                <div className="absolute inset-0 rounded-full bg-gradient-primary animate-pulse-glow" />
-                <div className="absolute inset-4 rounded-full bg-card flex items-center justify-center">
-                  <div className="flex gap-1">
-                    {[...Array(12)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 bg-gradient-accent rounded-full animate-wave`}
-                        style={{
-                          height: isPlaying ? `${Math.random() * 80 + 20}px` : '20px',
-                          animationDelay: `${i * 0.1}s`,
-                          transition: 'height 0.1s ease'
-                        }}
-                      />
-                    ))}
+              <div className="relative w-80 h-80">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-3xl animate-pulse" />
+                
+                <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-pulse-glow" />
+                
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-card/90 to-background/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {[...Array(48)].map((_, i) => {
+                        const angle = (i * 360) / 48;
+                        const radius = 140;
+                        const x = Math.cos((angle * Math.PI) / 180) * radius;
+                        const y = Math.sin((angle * Math.PI) / 180) * radius;
+                        const baseHeight = 4;
+                        const maxHeight = isPlaying ? 60 + Math.sin(i * 0.5) * 20 : 4;
+                        const animationSpeed = 0.3 + (i % 3) * 0.1;
+                        
+                        return (
+                          <div
+                            key={i}
+                            className="absolute origin-bottom"
+                            style={{
+                              left: '50%',
+                              top: '50%',
+                              transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${angle + 90}deg)`,
+                            }}
+                          >
+                            <div
+                              className="w-1.5 rounded-full transition-all duration-75"
+                              style={{
+                                height: `${isPlaying ? maxHeight : baseHeight}px`,
+                                background: `linear-gradient(180deg, 
+                                  hsl(${262 + (i * 2)}deg 83% 58%) 0%, 
+                                  hsl(${291 + (i * 1.5)}deg 76% 62%) 50%,
+                                  hsl(${19 + (i * 0.5)}deg 91% 55%) 100%)`,
+                                boxShadow: isPlaying ? `0 0 10px hsl(${262 + (i * 2)}deg 83% 58% / 0.8)` : 'none',
+                                animation: isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
+                                animationDelay: `${i * 0.02}s`,
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className="relative z-10 text-center">
+                      <div className={`text-6xl font-heading font-bold transition-all duration-500 ${
+                        isPlaying ? 'glow-neon scale-110' : 'opacity-50 scale-100'
+                      }`}>
+                        {isPlaying ? '♪' : '♫'}
+                      </div>
+                      {isPlaying && (
+                        <div className="mt-3 text-sm font-semibold text-primary animate-pulse">
+                          ON AIR
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
