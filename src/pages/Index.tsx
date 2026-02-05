@@ -7,9 +7,22 @@ import { Track, Schedule, Podcast, Message } from '@/components/radio/types';
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState([75]);
+  const [volume, setVolume] = useState<number[]>(() => {
+    const saved = localStorage.getItem('pulse-radio-volume');
+    return saved ? [parseInt(saved, 10)] : [75];
+  });
   const [audioData, setAudioData] = useState<number[]>(new Array(60).fill(0));
-  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'day' | 'evening' | 'night'>('night');
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'day' | 'evening' | 'night'>(() => {
+    const saved = localStorage.getItem('pulse-radio-theme');
+    if (saved && ['morning', 'day', 'evening', 'night'].includes(saved)) {
+      return saved as 'morning' | 'day' | 'evening' | 'night';
+    }
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'day';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -17,12 +30,8 @@ const Index = () => {
   const RADIO_URL = 'https://myradio24.org/75725';
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) setTimeOfDay('morning');
-    else if (hour >= 12 && hour < 17) setTimeOfDay('day');
-    else if (hour >= 17 && hour < 21) setTimeOfDay('evening');
-    else setTimeOfDay('night');
-  }, []);
+    localStorage.setItem('pulse-radio-theme', timeOfDay);
+  }, [timeOfDay]);
 
   useEffect(() => {
     audioRef.current = new Audio(RADIO_URL);
@@ -60,6 +69,7 @@ const Index = () => {
     if (audioRef.current) {
       audioRef.current.volume = volume[0] / 100;
     }
+    localStorage.setItem('pulse-radio-volume', volume[0].toString());
   }, [volume]);
 
   const analyzeAudio = () => {
