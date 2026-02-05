@@ -183,14 +183,20 @@ const Index = () => {
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-card/90 to-background/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
                   <div className="relative w-full h-full flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center justify-center">
-                      {[...Array(48)].map((_, i) => {
-                        const angle = (i * 360) / 48;
-                        const radius = 140;
+                      {[...Array(60)].map((_, i) => {
+                        const angle = (i * 360) / 60;
+                        const radius = 145;
                         const x = Math.cos((angle * Math.PI) / 180) * radius;
                         const y = Math.sin((angle * Math.PI) / 180) * radius;
-                        const baseHeight = 4;
-                        const maxHeight = isPlaying ? 60 + Math.sin(i * 0.5) * 20 : 4;
-                        const animationSpeed = 0.3 + (i % 3) * 0.1;
+                        const baseHeight = 3;
+                        const wavePattern = Math.sin(i * 0.3) * 25 + Math.cos(i * 0.15) * 15;
+                        const maxHeight = isPlaying ? 50 + wavePattern : baseHeight;
+                        const animationSpeed = 0.4 + (i % 5) * 0.08;
+                        
+                        const hue1 = (262 + (i * 6)) % 360;
+                        const hue2 = (291 + (i * 4)) % 360;
+                        const hue3 = (320 + (i * 3)) % 360;
+                        const hue4 = (19 + (i * 2)) % 360;
                         
                         return (
                           <div
@@ -203,16 +209,22 @@ const Index = () => {
                             }}
                           >
                             <div
-                              className="w-1.5 rounded-full transition-all duration-75"
+                              className="w-2 rounded-full transition-all duration-100"
                               style={{
                                 height: `${isPlaying ? maxHeight : baseHeight}px`,
                                 background: `linear-gradient(180deg, 
-                                  hsl(${262 + (i * 2)}deg 83% 58%) 0%, 
-                                  hsl(${291 + (i * 1.5)}deg 76% 62%) 50%,
-                                  hsl(${19 + (i * 0.5)}deg 91% 55%) 100%)`,
-                                boxShadow: isPlaying ? `0 0 10px hsl(${262 + (i * 2)}deg 83% 58% / 0.8)` : 'none',
+                                  hsl(${hue1}deg 90% 65%) 0%, 
+                                  hsl(${hue2}deg 85% 60%) 30%,
+                                  hsl(${hue3}deg 88% 58%) 60%,
+                                  hsl(${hue4}deg 92% 55%) 100%)`,
+                                boxShadow: isPlaying 
+                                  ? `0 0 15px hsl(${hue1}deg 90% 65% / 0.9),
+                                     0 0 25px hsl(${hue2}deg 85% 60% / 0.6),
+                                     0 0 35px hsl(${hue3}deg 88% 58% / 0.4)` 
+                                  : 'none',
                                 animation: isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
-                                animationDelay: `${i * 0.02}s`,
+                                animationDelay: `${i * 0.015}s`,
+                                filter: isPlaying ? 'brightness(1.2) saturate(1.3)' : 'brightness(0.7)',
                               }}
                             />
                           </div>
