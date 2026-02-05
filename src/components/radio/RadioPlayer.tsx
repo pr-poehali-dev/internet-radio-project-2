@@ -69,6 +69,36 @@ const RadioPlayer = ({
 
         <div className="flex items-center justify-center">
           <div className="relative w-80 h-80">
+            {isPlaying && [...Array(12)].map((_, i) => (
+              <div
+                key={`particle-${i}`}
+                className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full"
+                style={{
+                  background: `radial-gradient(circle, hsl(${(i * 30) % 360}deg 90% 70%) 0%, transparent 70%)`,
+                  boxShadow: `0 0 10px hsl(${(i * 30) % 360}deg 90% 70%)`,
+                  animation: `particle-orbit ${8 + i * 2}s linear infinite`,
+                  animationDelay: `${i * 0.3}s`,
+                  filter: 'blur(1px)',
+                }}
+              />
+            ))}
+
+            {isPlaying && [...Array(8)].map((_, i) => (
+              <div
+                key={`float-particle-${i}`}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  left: `${20 + Math.random() * 60}%`,
+                  bottom: '10%',
+                  background: `radial-gradient(circle, hsl(${(i * 45) % 360}deg 85% 65%) 0%, transparent 70%)`,
+                  boxShadow: `0 0 8px hsl(${(i * 45) % 360}deg 85% 65%)`,
+                  animation: `particle-float ${4 + Math.random() * 3}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.5}s`,
+                  filter: 'blur(0.5px)',
+                }}
+              />
+            ))}
+
             <div 
               className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-3xl"
               style={{
@@ -180,6 +210,17 @@ const RadioPlayer = ({
                 </div>
               </div>
             </div>
+
+            {isPlaying && (
+              <div 
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-80 h-32 rounded-full opacity-30 blur-2xl"
+                style={{
+                  background: 'radial-gradient(ellipse, hsl(var(--primary) / 0.4) 0%, transparent 70%)',
+                  animation: 'reflection-wave 3s ease-in-out infinite',
+                  transform: 'translateX(-50%) scaleY(0.3)',
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
