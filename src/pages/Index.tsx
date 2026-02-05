@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -41,6 +41,39 @@ interface Message {
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const RADIO_URL = 'https://myradio24.org/75725';
+
+  useEffect(() => {
+    audioRef.current = new Audio(RADIO_URL);
+    audioRef.current.volume = volume[0] / 100;
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume[0] / 100;
+    }
+  }, [volume]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch((error) => {
+          console.error('Ошибка воспроизведения:', error);
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
   const [currentTrack] = useState({
     title: 'Summer Vibes 2024',
     artist: 'DJ Neon',
@@ -114,7 +147,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   className="w-16 h-16 rounded-full gradient-primary glow-box hover:scale-110 transition-transform"
-                  onClick={() => setIsPlaying(!isPlaying)}
+                  onClick={togglePlay}
                 >
                   <Icon name={isPlaying ? "Pause" : "Play"} size={28} />
                 </Button>
