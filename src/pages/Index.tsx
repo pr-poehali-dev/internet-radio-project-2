@@ -41,14 +41,47 @@ interface Message {
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
+  const [audioData, setAudioData] = useState<number[]>(new Array(60).fill(0));
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'day' | 'evening' | 'night'>('night');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const RADIO_URL = 'https://myradio24.org/75725';
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setTimeOfDay('morning');
+    else if (hour >= 12 && hour < 17) setTimeOfDay('day');
+    else if (hour >= 17 && hour < 21) setTimeOfDay('evening');
+    else setTimeOfDay('night');
+  }, []);
 
   useEffect(() => {
     audioRef.current = new Audio(RADIO_URL);
     audioRef.current.volume = volume[0] / 100;
+    audioRef.current.crossOrigin = 'anonymous';
+    
+    try {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      analyserRef.current.smoothingTimeConstant = 0.8;
+      
+      const source = audioContextRef.current.createMediaElementSource(audioRef.current);
+      source.connect(analyserRef.current);
+      analyserRef.current.connect(audioContextRef.current.destination);
+    } catch (error) {
+      console.log('Web Audio API недоступен, используется базовая визуализация');
+    }
     
     return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -62,14 +95,43 @@ const Index = () => {
     }
   }, [volume]);
 
+  const analyzeAudio = () => {
+    if (!analyserRef.current || !isPlaying) return;
+    
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(dataArray);
+    
+    const bars = 60;
+    const step = Math.floor(dataArray.length / bars);
+    const newAudioData = [];
+    
+    for (let i = 0; i < bars; i++) {
+      const start = i * step;
+      const end = start + step;
+      const slice = dataArray.slice(start, end);
+      const average = slice.reduce((a, b) => a + b, 0) / slice.length;
+      newAudioData.push(average / 255);
+    }
+    
+    setAudioData(newAudioData);
+    animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+  };
+
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
       } else {
+        if (audioContextRef.current?.state === 'suspended') {
+          audioContextRef.current.resume();
+        }
         audioRef.current.play().catch((error) => {
           console.error('Ошибка воспроизведения:', error);
         });
+        analyzeAudio();
       }
       setIsPlaying(!isPlaying);
     }
@@ -189,14 +251,25 @@ const Index = () => {
                         const x = Math.cos((angle * Math.PI) / 180) * radius;
                         const y = Math.sin((angle * Math.PI) / 180) * radius;
                         const baseHeight = 3;
+                        
+                        const audioLevel = audioData[i] || 0;
                         const wavePattern = Math.sin(i * 0.3) * 25 + Math.cos(i * 0.15) * 15;
-                        const maxHeight = isPlaying ? 50 + wavePattern : baseHeight;
+                        const audioBoost = audioLevel * 60;
+                        const maxHeight = isPlaying ? 50 + wavePattern + audioBoost : baseHeight;
                         const animationSpeed = 0.4 + (i % 5) * 0.08;
                         
-                        const hue1 = (262 + (i * 6)) % 360;
-                        const hue2 = (291 + (i * 4)) % 360;
-                        const hue3 = (320 + (i * 3)) % 360;
-                        const hue4 = (19 + (i * 2)) % 360;
+                        const timeColors = {
+                          morning: { base: 45, spread: 30 },
+                          day: { base: 180, spread: 40 },
+                          evening: { base: 15, spread: 25 },
+                          night: { base: 262, spread: 60 }
+                        };
+                        
+                        const colorScheme = timeColors[timeOfDay];
+                        const hue1 = (colorScheme.base + (i * 6)) % 360;
+                        const hue2 = (colorScheme.base + colorScheme.spread + (i * 4)) % 360;
+                        const hue3 = (colorScheme.base + colorScheme.spread * 2 + (i * 3)) % 360;
+                        const hue4 = (colorScheme.base + colorScheme.spread * 3 + (i * 2)) % 360;
                         
                         return (
                           <div
@@ -218,13 +291,13 @@ const Index = () => {
                                   hsl(${hue3}deg 88% 58%) 60%,
                                   hsl(${hue4}deg 92% 55%) 100%)`,
                                 boxShadow: isPlaying 
-                                  ? `0 0 15px hsl(${hue1}deg 90% 65% / 0.9),
-                                     0 0 25px hsl(${hue2}deg 85% 60% / 0.6),
-                                     0 0 35px hsl(${hue3}deg 88% 58% / 0.4)` 
+                                  ? `0 0 ${15 + audioLevel * 20}px hsl(${hue1}deg 90% 65% / ${0.9 + audioLevel * 0.1}),
+                                     0 0 ${25 + audioLevel * 30}px hsl(${hue2}deg 85% 60% / 0.6),
+                                     0 0 ${35 + audioLevel * 40}px hsl(${hue3}deg 88% 58% / 0.4)` 
                                   : 'none',
-                                animation: isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
+                                animation: !analyserRef.current && isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
                                 animationDelay: `${i * 0.015}s`,
-                                filter: isPlaying ? 'brightness(1.2) saturate(1.3)' : 'brightness(0.7)',
+                                filter: isPlaying ? `brightness(${1.2 + audioLevel * 0.3}) saturate(${1.3 + audioLevel * 0.5})` : 'brightness(0.7)',
                               }}
                             />
                           </div>
