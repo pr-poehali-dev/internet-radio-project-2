@@ -1,12 +1,29 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { CurrentTrack } from './types';
 
 interface RadioHeaderProps {
   currentTrack: CurrentTrack;
+  timeOfDay: 'morning' | 'day' | 'evening' | 'night';
+  onTimeOfDayChange: (time: 'morning' | 'day' | 'evening' | 'night') => void;
 }
 
-const RadioHeader = ({ currentTrack }: RadioHeaderProps) => {
+const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeaderProps) => {
+  const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
+    { value: 'morning', icon: 'Sunrise', label: 'Утро' },
+    { value: 'day', icon: 'Sun', label: 'День' },
+    { value: 'evening', icon: 'Sunset', label: 'Вечер' },
+    { value: 'night', icon: 'Moon', label: 'Ночь' },
+  ];
+
+  const cycleTimeOfDay = () => {
+    const currentIndex = timeOptions.findIndex(opt => opt.value === timeOfDay);
+    const nextIndex = (currentIndex + 1) % timeOptions.length;
+    onTimeOfDayChange(timeOptions[nextIndex].value);
+  };
+
+  const currentOption = timeOptions.find(opt => opt.value === timeOfDay);
   return (
     <header className="flex items-center justify-between mb-8 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -19,6 +36,16 @@ const RadioHeader = ({ currentTrack }: RadioHeaderProps) => {
         </div>
       </div>
       <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={cycleTimeOfDay}
+          className="gap-2 hover:scale-105 transition-transform"
+          title="Сменить цветовую схему"
+        >
+          <Icon name={currentOption?.icon || 'Moon'} size={16} />
+          <span className="hidden sm:inline">{currentOption?.label}</span>
+        </Button>
         <Badge variant="secondary" className="animate-pulse-glow">
           <div className="w-2 h-2 bg-neon-orange rounded-full mr-2" />
           LIVE

@@ -142,7 +142,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <RadioHeader currentTrack={currentTrack} />
+        <RadioHeader 
+          currentTrack={currentTrack} 
+          timeOfDay={timeOfDay}
+          onTimeOfDayChange={setTimeOfDay}
+        />
         
         <RadioPlayer 
           currentTrack={currentTrack}
