@@ -69,9 +69,27 @@ const RadioPlayer = ({
 
         <div className="flex items-center justify-center">
           <div className="relative w-80 h-80">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-3xl animate-pulse" />
+            <div 
+              className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-3xl"
+              style={{
+                animation: isPlaying ? 'ripple 4s ease-in-out infinite, color-shift 8s ease-in-out infinite' : 'none'
+              }}
+            />
             
-            <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-pulse-glow" />
+            <div 
+              className="absolute inset-4 rounded-full bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 blur-2xl"
+              style={{
+                animation: isPlaying ? 'ripple 3s ease-in-out infinite reverse' : 'none',
+                animationDelay: '0.5s'
+              }}
+            />
+            
+            <div 
+              className="absolute inset-0 rounded-full border-4 border-primary/30"
+              style={{
+                animation: isPlaying ? 'float-rotate 20s linear infinite, pulse-glow 3s ease-in-out infinite' : 'pulse-glow 3s ease-in-out infinite'
+              }}
+            />
             
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-card/90 to-background/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
               <div className="relative w-full h-full flex items-center justify-center">
@@ -113,7 +131,7 @@ const RadioPlayer = ({
                         }}
                       >
                         <div
-                          className="w-2 rounded-full transition-all duration-100"
+                          className="w-2 rounded-full transition-all"
                           style={{
                             height: `${isPlaying ? maxHeight : baseHeight}px`,
                             background: `linear-gradient(180deg, 
@@ -128,7 +146,9 @@ const RadioPlayer = ({
                               : 'none',
                             animation: !analyserRef.current && isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
                             animationDelay: `${i * 0.015}s`,
-                            filter: isPlaying ? `brightness(${1.2 + audioLevel * 0.3}) saturate(${1.3 + audioLevel * 0.5})` : 'brightness(0.7)',
+                            filter: isPlaying ? `brightness(${1.2 + audioLevel * 0.3}) saturate(${1.3 + audioLevel * 0.5}) blur(0.3px)` : 'brightness(0.7)',
+                            transitionDuration: analyserRef.current ? '150ms' : '300ms',
+                            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         />
                       </div>
@@ -137,13 +157,23 @@ const RadioPlayer = ({
                 </div>
                 
                 <div className="relative z-10 text-center">
-                  <div className={`text-6xl font-heading font-bold transition-all duration-500 ${
-                    isPlaying ? 'glow-neon scale-110' : 'opacity-50 scale-100'
-                  }`}>
+                  <div 
+                    className={`text-6xl font-heading font-bold transition-all duration-500 ${
+                      isPlaying ? 'glow-neon scale-110' : 'opacity-50 scale-100'
+                    }`}
+                    style={{
+                      animation: isPlaying ? 'float-rotate 8s ease-in-out infinite' : 'none'
+                    }}
+                  >
                     {isPlaying ? '♪' : '♫'}
                   </div>
                   {isPlaying && (
-                    <div className="mt-3 text-sm font-semibold text-primary animate-pulse">
+                    <div 
+                      className="mt-3 text-sm font-semibold text-primary"
+                      style={{
+                        animation: 'pulse-glow 2s ease-in-out infinite'
+                      }}
+                    >
                       ON AIR
                     </div>
                   )}

@@ -120,4 +120,47 @@
       transform: scaleY(0.4);
     }
   }
+
+  @keyframes float-rotate {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.05);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.4;
+    }
+    100% {
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes color-shift {
+    0%,
+    100% {
+      filter: hue-rotate(0deg);
+    }
+    25% {
+      filter: hue-rotate(10deg);
+    }
+    50% {
+      filter: hue-rotate(-5deg);
+    }
+    75% {
+      filter: hue-rotate(15deg);
+    }
+  }
 }
