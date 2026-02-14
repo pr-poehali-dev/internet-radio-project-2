@@ -23,28 +23,22 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
     };
   }, []);
 
-  useEffect(() => {
-    const moveWidster = () => {
-      const widsterSource = document.getElementById('widster-widget');
-      const widsterTarget = document.getElementById('widster-container');
-      if (widsterSource && widsterTarget && widsterSource.childNodes.length > 0) {
-        widsterTarget.appendChild(widsterSource);
-        widsterSource.style.display = 'block';
-        return true;
-      }
-      return false;
-    };
+  const widsterRef = useRef<HTMLDivElement>(null);
 
-    if (!moveWidster()) {
-      const observer = new MutationObserver(() => {
-        if (moveWidster()) observer.disconnect();
-      });
-      const source = document.getElementById('widster-widget');
-      if (source) {
-        observer.observe(source, { childList: true, subtree: true });
-      }
-      return () => observer.disconnect();
-    }
+  useEffect(() => {
+    if (!widsterRef.current) return;
+    const container = widsterRef.current;
+    const win = window as unknown as Record<string, string>;
+    win.wwidget = 'd6cc2f4838b530f5a75c79609102a8a65daad76f9bf9b50ea43066aded1c9972';
+    const script = document.createElement('script');
+    script.async = true;
+    script.charset = 'UTF-8';
+    script.src = 'https://widster.ru/embed/' + win.wwidget;
+    container.appendChild(script);
+    return () => {
+      if (container.contains(script)) container.removeChild(script);
+      delete win.wwidget;
+    };
   }, []);
 
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
@@ -95,7 +89,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </div>
         </div>
       </header>
-      <div id="widster-container" className="mt-4" />
+      <div ref={widsterRef} className="mt-4" />
     </div>
   );
 };
