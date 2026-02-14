@@ -12,7 +12,6 @@ interface RadioHeaderProps {
 
 const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeaderProps) => {
   const storiesRef = useRef<HTMLDivElement>(null);
-  const widsterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -25,18 +24,13 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
   }, []);
 
   useEffect(() => {
-    if (!widsterRef.current) return;
-    const win = window as unknown as Record<string, string>;
-    win.wwidget = 'd6cc2f4838b530f5a75c79609102a8a65daad76f9bf9b50ea43066aded1c9972';
-    const script = document.createElement('script');
-    script.async = true;
-    script.charset = 'UTF-8';
-    script.src = 'https://widster.ru/embed/' + win.wwidget;
-    widsterRef.current.appendChild(script);
-    return () => {
-      script.remove();
-      delete win.wwidget;
-    };
+    const widsterSource = document.getElementById('widster-widget');
+    const widsterTarget = document.getElementById('widster-container');
+    if (widsterSource && widsterTarget) {
+      while (widsterSource.childNodes.length > 0) {
+        widsterTarget.appendChild(widsterSource.childNodes[0]);
+      }
+    }
   }, []);
 
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
@@ -87,7 +81,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </div>
         </div>
       </header>
-      <div ref={widsterRef} className="mt-4" />
+      <div id="widster-container" className="mt-4" />
     </div>
   );
 };
