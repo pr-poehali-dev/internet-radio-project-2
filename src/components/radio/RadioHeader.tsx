@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -10,6 +11,18 @@ interface RadioHeaderProps {
 }
 
 const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeaderProps) => {
+  const storiesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://app.vidwidget.ru/n/7c352719-e579-453f-9dfb-e5dac97bffee/';
+    script.async = true;
+    storiesRef.current?.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, []);
+
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
     { value: 'morning', icon: 'Sunrise', label: 'Утро' },
     { value: 'day', icon: 'Sun', label: 'День' },
@@ -33,6 +46,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
         <div>
           <h1 className="text-3xl font-heading font-bold glow-neon">PULSE RADIO</h1>
           <p className="text-sm text-muted-foreground">Non-stop electronic beats</p>
+          <div id="vw_stories" ref={storiesRef} />
         </div>
       </div>
       <div className="flex items-center gap-4">
