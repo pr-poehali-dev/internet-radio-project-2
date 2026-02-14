@@ -23,23 +23,6 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
     };
   }, []);
 
-  const widsterRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!widsterRef.current) return;
-    const container = widsterRef.current;
-    const win = window as unknown as Record<string, string>;
-    win.wwidget = 'd6cc2f4838b530f5a75c79609102a8a65daad76f9bf9b50ea43066aded1c9972';
-    const script = document.createElement('script');
-    script.async = true;
-    script.charset = 'UTF-8';
-    script.src = 'https://widster.ru/embed/' + win.wwidget;
-    container.appendChild(script);
-    return () => {
-      if (container.contains(script)) container.removeChild(script);
-      delete win.wwidget;
-    };
-  }, []);
 
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
     { value: 'morning', icon: 'Sunrise', label: 'Утро' },
@@ -89,7 +72,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </div>
         </div>
       </header>
-      <div ref={widsterRef} className="mt-4" />
+
     </div>
   );
 };
