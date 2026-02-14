@@ -24,12 +24,26 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
   }, []);
 
   useEffect(() => {
-    const widsterSource = document.getElementById('widster-widget');
-    const widsterTarget = document.getElementById('widster-container');
-    if (widsterSource && widsterTarget) {
-      while (widsterSource.childNodes.length > 0) {
-        widsterTarget.appendChild(widsterSource.childNodes[0]);
+    const moveWidster = () => {
+      const widsterSource = document.getElementById('widster-widget');
+      const widsterTarget = document.getElementById('widster-container');
+      if (widsterSource && widsterTarget && widsterSource.childNodes.length > 0) {
+        widsterTarget.appendChild(widsterSource);
+        widsterSource.style.display = 'block';
+        return true;
       }
+      return false;
+    };
+
+    if (!moveWidster()) {
+      const observer = new MutationObserver(() => {
+        if (moveWidster()) observer.disconnect();
+      });
+      const source = document.getElementById('widster-widget');
+      if (source) {
+        observer.observe(source, { childList: true, subtree: true });
+      }
+      return () => observer.disconnect();
     }
   }, []);
 
