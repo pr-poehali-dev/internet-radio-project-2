@@ -27,22 +27,22 @@ const RadioPlayer = ({
   analyserRef
 }: RadioPlayerProps) => {
   return (
-    <Card className="bg-card/80 backdrop-blur-xl border-primary/20 p-8 animate-fade-in glow-box">
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
+    <Card className="bg-card/80 backdrop-blur-xl border-primary/20 p-4 sm:p-8 animate-fade-in glow-box">
+      <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
+        <div className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Badge className="gradient-primary">{currentTrack.genre}</Badge>
-            <h2 className="text-4xl font-heading font-bold">{currentTrack.title}</h2>
-            <p className="text-xl text-muted-foreground">{currentTrack.artist}</p>
+            <h2 className="text-2xl sm:text-4xl font-heading font-bold break-words">{currentTrack.title}</h2>
+            <p className="text-base sm:text-xl text-muted-foreground">{currentTrack.artist}</p>
           </div>
 
-          <div className="flex items-center gap-3 pt-4">
+          <div className="flex items-center gap-3 pt-2 sm:pt-4">
             <Button 
               size="lg" 
-              className="w-16 h-16 rounded-full gradient-primary glow-box hover:scale-110 transition-transform"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full gradient-primary glow-box hover:scale-110 transition-transform shrink-0"
               onClick={togglePlay}
             >
-              <Icon name={isPlaying ? "Pause" : "Play"} size={28} />
+              <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
             </Button>
             <Button size="lg" variant="outline" className="rounded-full">
               <Icon name="Heart" size={20} />
@@ -53,8 +53,8 @@ const RadioPlayer = ({
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <Icon name="Volume2" size={20} className="text-primary" />
+            <div className="flex items-center gap-3">
+              <Icon name="Volume2" size={20} className="text-primary shrink-0" />
               <Slider 
                 value={volume} 
                 onValueChange={setVolume}
@@ -62,13 +62,13 @@ const RadioPlayer = ({
                 step={1}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold w-12 text-right">{volume[0]}%</span>
+              <span className="text-sm font-semibold w-10 text-right shrink-0">{volume[0]}%</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center justify-center">
-          <div className="relative w-80 h-80">
+          <div className="relative w-64 h-64 sm:w-80 sm:h-80">
             {isPlaying && [...Array(12)].map((_, i) => (
               <div
                 key={`particle-${i}`}
@@ -126,7 +126,7 @@ const RadioPlayer = ({
                 <div className="absolute inset-0 flex items-center justify-center">
                   {[...Array(60)].map((_, i) => {
                     const angle = (i * 360) / 60;
-                    const radius = 145;
+                    const radius = 110;
                     const x = Math.cos((angle * Math.PI) / 180) * radius;
                     const y = Math.sin((angle * Math.PI) / 180) * radius;
                     const baseHeight = 3;
@@ -188,7 +188,7 @@ const RadioPlayer = ({
                 
                 <div className="relative z-10 text-center">
                   <div 
-                    className={`text-6xl font-heading font-bold transition-all duration-500 ${
+                    className={`text-5xl sm:text-6xl font-heading font-bold transition-all duration-500 ${
                       isPlaying ? 'glow-neon scale-110' : 'opacity-50 scale-100'
                     }`}
                     style={{
@@ -213,7 +213,7 @@ const RadioPlayer = ({
 
             {isPlaying && (
               <div 
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-80 h-32 rounded-full opacity-30 blur-2xl"
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-64 sm:w-80 h-32 rounded-full opacity-30 blur-2xl"
                 style={{
                   background: 'radial-gradient(ellipse, hsl(var(--primary) / 0.4) 0%, transparent 70%)',
                   animation: 'reflection-wave 3s ease-in-out infinite',

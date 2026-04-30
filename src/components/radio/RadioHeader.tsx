@@ -23,7 +23,6 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
     };
   }, []);
 
-
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
     { value: 'morning', icon: 'Sunrise', label: 'Утро' },
     { value: 'day', icon: 'Sun', label: 'День' },
@@ -39,40 +38,39 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
 
   const currentOption = timeOptions.find(opt => opt.value === timeOfDay);
   return (
-    <div className="mb-8 animate-fade-in">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center glow-box">
-            <Icon name="Radio" size={24} className="text-white" />
+    <div className="mb-6 animate-fade-in">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-gradient-primary flex items-center justify-center glow-box">
+            <Icon name="Radio" size={20} className="text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-heading font-bold glow-neon">PULSE RADIO</h1>
-            <p className="text-sm text-muted-foreground">Non-stop electronic beats</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-heading font-bold glow-neon truncate">PULSE RADIO</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Non-stop electronic beats</p>
             <div id="vw_stories" ref={storiesRef} />
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <Button
+            variant="outline"
             size="sm"
             onClick={cycleTimeOfDay}
-            className="gap-2 hover:scale-105 transition-transform"
+            className="gap-1 sm:gap-2 hover:scale-105 transition-transform px-2 sm:px-3"
             title="Сменить цветовую схему"
           >
             <Icon name={currentOption?.icon || 'Moon'} size={16} />
             <span className="hidden sm:inline">{currentOption?.label}</span>
           </Button>
-          <Badge variant="secondary" className="animate-pulse-glow">
-            <div className="w-2 h-2 bg-neon-orange rounded-full mr-2" />
+          <Badge variant="secondary" className="animate-pulse-glow whitespace-nowrap">
+            <div className="w-2 h-2 bg-neon-orange rounded-full mr-1 sm:mr-2" />
             LIVE
           </Badge>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1 text-sm">
             <Icon name="Users" size={16} />
             <span className="font-semibold">{currentTrack.listeners.toLocaleString()}</span>
           </div>
         </div>
       </header>
-
     </div>
   );
 };
