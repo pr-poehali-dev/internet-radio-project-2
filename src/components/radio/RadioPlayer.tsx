@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -15,6 +16,153 @@ interface RadioPlayerProps {
   setVolume: (value: number[]) => void;
   analyserRef: React.MutableRefObject<AnalyserNode | null>;
 }
+
+const TIME_COLORS = {
+  morning: ['#ff9a3c', '#ffcc70', '#ff6b6b', '#ffd93d'],
+  day:     ['#00d2ff', '#3a7bd5', '#00c9ff', '#92fe9d'],
+  evening: ['#ff6b35', '#f7c59f', '#ff4757', '#ff6348'],
+  night:   ['#a855f7', '#6366f1', '#ec4899', '#8b5cf6'],
+};
+
+const WaveCircle = ({
+  isPlaying,
+  audioData,
+  analyserRef,
+  timeOfDay,
+}: {
+  isPlaying: boolean;
+  audioData: number[];
+  analyserRef: React.MutableRefObject<AnalyserNode | null>;
+  timeOfDay: keyof typeof TIME_COLORS;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number>(0);
+  const phaseRef = useRef(0);
+  const rippleRef = useRef<{ r: number; alpha: number }[]>([]);
+  const lastRmsRef = useRef(0);
+
+  const draw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W / 2;
+    const cy = H / 2;
+    const maxR = Math.min(cx, cy) - 4;
+    const colors = TIME_COLORS[timeOfDay];
+
+    ctx.clearRect(0, 0, W, H);
+
+    let rms = 0;
+    if (analyserRef.current && isPlaying) {
+      const buf = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(buf);
+      const sum = buf.reduce((a, b) => a + b, 0);
+      rms = sum / buf.length / 255;
+    } else if (isPlaying && audioData.length) {
+      rms = audioData.reduce((a, b) => a + b, 0) / audioData.length;
+    }
+
+    if (isPlaying && rms - lastRmsRef.current > 0.18) {
+      rippleRef.current.push({ r: maxR * 0.55, alpha: 0.7 });
+    }
+    lastRmsRef.current = rms;
+
+    rippleRef.current = rippleRef.current
+      .map(rp => ({ r: rp.r + 1.8, alpha: rp.alpha - 0.012 }))
+      .filter(rp => rp.alpha > 0);
+
+    rippleRef.current.forEach(rp => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rp.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `${colors[0]}${Math.round(rp.alpha * 255).toString(16).padStart(2, '0')}`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    const BARS = 120;
+    const baseR = maxR * 0.52;
+    const phase = phaseRef.current;
+
+    for (let i = 0; i < BARS; i++) {
+      const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
+      const dataIdx = Math.floor((i / BARS) * audioData.length);
+      const audioLevel = isPlaying ? (audioData[dataIdx] || 0) : 0;
+
+      const wave1 = Math.sin(angle * 3 + phase) * 0.15;
+      const wave2 = Math.cos(angle * 5 - phase * 1.3) * 0.08;
+      const wave3 = Math.sin(angle * 2 + phase * 0.7) * 0.06;
+
+      const barLen = isPlaying
+        ? (maxR - baseR) * (0.15 + audioLevel * 0.72 + wave1 + wave2 + wave3)
+        : (maxR - baseR) * (0.05 + wave1 * 0.3 + 0.04);
+
+      const x1 = cx + Math.cos(angle) * baseR;
+      const y1 = cy + Math.sin(angle) * baseR;
+      const x2 = cx + Math.cos(angle) * (baseR + barLen);
+      const y2 = cy + Math.sin(angle) * (baseR + barLen);
+
+      const colorIdx = Math.floor((i / BARS) * colors.length);
+      const colorNext = colors[(colorIdx + 1) % colors.length];
+      const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+      grad.addColorStop(0, colors[colorIdx] + 'aa');
+      grad.addColorStop(1, colorNext + 'ff');
+
+      const glow = isPlaying ? 0.6 + audioLevel * 0.4 : 0.25;
+      ctx.save();
+      ctx.shadowColor = colors[colorIdx];
+      ctx.shadowBlur = isPlaying ? 8 + audioLevel * 18 : 3;
+      ctx.globalAlpha = glow;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = isPlaying ? 1.5 + audioLevel * 1.5 : 1;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
+    innerGrad.addColorStop(0, colors[0] + (isPlaying ? '22' : '0a'));
+    innerGrad.addColorStop(0.6, colors[2] + (isPlaying ? '18' : '08'));
+    innerGrad.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+    ctx.fillStyle = innerGrad;
+    ctx.fill();
+
+    if (isPlaying) {
+      const pulseR = baseR * (0.85 + rms * 0.15);
+      ctx.beginPath();
+      ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
+      ctx.strokeStyle = colors[1] + '55';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    phaseRef.current += isPlaying ? 0.025 : 0.006;
+    rafRef.current = requestAnimationFrame(draw);
+  }, [isPlaying, audioData, analyserRef, timeOfDay]);
+
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [draw]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={280}
+      height={280}
+      className="w-full h-full rounded-full"
+      style={{ display: 'block' }}
+    />
+  );
+};
 
 const RadioPlayer = ({ 
   currentTrack, 
@@ -68,159 +216,36 @@ const RadioPlayer = ({
         </div>
 
         <div className="flex items-center justify-center">
-          <div className="relative w-64 h-64 sm:w-80 sm:h-80">
-            {isPlaying && [...Array(12)].map((_, i) => (
-              <div
-                key={`particle-${i}`}
-                className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full"
-                style={{
-                  background: `radial-gradient(circle, hsl(${(i * 30) % 360}deg 90% 70%) 0%, transparent 70%)`,
-                  boxShadow: `0 0 10px hsl(${(i * 30) % 360}deg 90% 70%)`,
-                  animation: `particle-orbit ${8 + i * 2}s linear infinite`,
-                  animationDelay: `${i * 0.3}s`,
-                  filter: 'blur(1px)',
-                }}
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72">
+            <div className="absolute inset-0 rounded-full bg-card/60 backdrop-blur-xl border border-primary/20" />
+            <div className="absolute inset-0 rounded-full overflow-hidden">
+              <WaveCircle
+                isPlaying={isPlaying}
+                audioData={audioData}
+                analyserRef={analyserRef}
+                timeOfDay={timeOfDay}
               />
-            ))}
-
-            {isPlaying && [...Array(8)].map((_, i) => (
-              <div
-                key={`float-particle-${i}`}
-                className="absolute w-1 h-1 rounded-full"
-                style={{
-                  left: `${20 + Math.random() * 60}%`,
-                  bottom: '10%',
-                  background: `radial-gradient(circle, hsl(${(i * 45) % 360}deg 85% 65%) 0%, transparent 70%)`,
-                  boxShadow: `0 0 8px hsl(${(i * 45) % 360}deg 85% 65%)`,
-                  animation: `particle-float ${4 + Math.random() * 3}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.5}s`,
-                  filter: 'blur(0.5px)',
-                }}
-              />
-            ))}
-
-            <div 
-              className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-accent opacity-20 blur-3xl"
-              style={{
-                animation: isPlaying ? 'ripple 4s ease-in-out infinite, color-shift 8s ease-in-out infinite' : 'none'
-              }}
-            />
-            
-            <div 
-              className="absolute inset-4 rounded-full bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 blur-2xl"
-              style={{
-                animation: isPlaying ? 'ripple 3s ease-in-out infinite reverse' : 'none',
-                animationDelay: '0.5s'
-              }}
-            />
-            
-            <div 
-              className="absolute inset-0 rounded-full border-4 border-primary/30"
-              style={{
-                animation: isPlaying ? 'float-rotate 20s linear infinite, pulse-glow 3s ease-in-out infinite' : 'pulse-glow 3s ease-in-out infinite'
-              }}
-            />
-            
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-card/90 to-background/90 backdrop-blur-xl flex items-center justify-center overflow-hidden">
-              <div className="relative w-full h-full flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {[...Array(60)].map((_, i) => {
-                    const angle = (i * 360) / 60;
-                    const radius = 110;
-                    const x = Math.cos((angle * Math.PI) / 180) * radius;
-                    const y = Math.sin((angle * Math.PI) / 180) * radius;
-                    const baseHeight = 3;
-                    
-                    const audioLevel = audioData[i] || 0;
-                    const wavePattern = Math.sin(i * 0.3) * 25 + Math.cos(i * 0.15) * 15;
-                    const audioBoost = audioLevel * 60;
-                    const maxHeight = isPlaying ? 50 + wavePattern + audioBoost : baseHeight;
-                    const animationSpeed = 0.4 + (i % 5) * 0.08;
-                    
-                    const timeColors = {
-                      morning: { base: 45, spread: 30 },
-                      day: { base: 180, spread: 40 },
-                      evening: { base: 15, spread: 25 },
-                      night: { base: 262, spread: 60 }
-                    };
-                    
-                    const colorScheme = timeColors[timeOfDay];
-                    const hue1 = (colorScheme.base + (i * 6)) % 360;
-                    const hue2 = (colorScheme.base + colorScheme.spread + (i * 4)) % 360;
-                    const hue3 = (colorScheme.base + colorScheme.spread * 2 + (i * 3)) % 360;
-                    const hue4 = (colorScheme.base + colorScheme.spread * 3 + (i * 2)) % 360;
-                    
-                    return (
-                      <div
-                        key={i}
-                        className="absolute origin-bottom"
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${angle + 90}deg)`,
-                        }}
-                      >
-                        <div
-                          className="w-2 rounded-full transition-all"
-                          style={{
-                            height: `${isPlaying ? maxHeight : baseHeight}px`,
-                            background: `linear-gradient(180deg, 
-                              hsl(${hue1}deg 90% 65%) 0%, 
-                              hsl(${hue2}deg 85% 60%) 30%,
-                              hsl(${hue3}deg 88% 58%) 60%,
-                              hsl(${hue4}deg 92% 55%) 100%)`,
-                            boxShadow: isPlaying 
-                              ? `0 0 ${15 + audioLevel * 20}px hsl(${hue1}deg 90% 65% / ${0.9 + audioLevel * 0.1}),
-                                 0 0 ${25 + audioLevel * 30}px hsl(${hue2}deg 85% 60% / 0.6),
-                                 0 0 ${35 + audioLevel * 40}px hsl(${hue3}deg 88% 58% / 0.4)` 
-                              : 'none',
-                            animation: !analyserRef.current && isPlaying ? `wave-height ${animationSpeed}s ease-in-out infinite` : 'none',
-                            animationDelay: `${i * 0.015}s`,
-                            filter: isPlaying ? `brightness(${1.2 + audioLevel * 0.3}) saturate(${1.3 + audioLevel * 0.5}) blur(0.3px)` : 'brightness(0.7)',
-                            transitionDuration: analyserRef.current ? '150ms' : '300ms',
-                            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center">
+                <div
+                  className={`text-5xl sm:text-6xl font-heading font-bold transition-all duration-500 select-none ${
+                    isPlaying ? 'glow-neon scale-110' : 'opacity-40 scale-100'
+                  }`}
+                  style={{ animation: isPlaying ? 'float-rotate 8s ease-in-out infinite' : 'none' }}
+                >
+                  {isPlaying ? '♪' : '♫'}
                 </div>
-                
-                <div className="relative z-10 text-center">
-                  <div 
-                    className={`text-5xl sm:text-6xl font-heading font-bold transition-all duration-500 ${
-                      isPlaying ? 'glow-neon scale-110' : 'opacity-50 scale-100'
-                    }`}
-                    style={{
-                      animation: isPlaying ? 'float-rotate 8s ease-in-out infinite' : 'none'
-                    }}
+                {isPlaying && (
+                  <div
+                    className="mt-2 text-xs font-semibold text-primary tracking-widest"
+                    style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
                   >
-                    {isPlaying ? '♪' : '♫'}
+                    ON AIR
                   </div>
-                  {isPlaying && (
-                    <div 
-                      className="mt-3 text-sm font-semibold text-primary"
-                      style={{
-                        animation: 'pulse-glow 2s ease-in-out infinite'
-                      }}
-                    >
-                      ON AIR
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
-
-            {isPlaying && (
-              <div 
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-64 sm:w-80 h-32 rounded-full opacity-30 blur-2xl"
-                style={{
-                  background: 'radial-gradient(ellipse, hsl(var(--primary) / 0.4) 0%, transparent 70%)',
-                  animation: 'reflection-wave 3s ease-in-out infinite',
-                  transform: 'translateX(-50%) scaleY(0.3)',
-                }}
-              />
-            )}
           </div>
         </div>
       </div>
