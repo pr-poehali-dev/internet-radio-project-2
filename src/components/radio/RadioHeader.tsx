@@ -1,8 +1,18 @@
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { CurrentTrack } from './types';
+import { useAuth } from '@/contexts/AuthContext';
+
+const AVATAR_COLORS = [
+  'from-purple-500 to-pink-500',
+  'from-blue-500 to-cyan-500',
+  'from-orange-500 to-red-500',
+  'from-green-500 to-emerald-500',
+  'from-yellow-500 to-orange-500',
+];
 
 interface RadioHeaderProps {
   currentTrack: CurrentTrack;
@@ -12,15 +22,14 @@ interface RadioHeaderProps {
 
 const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeaderProps) => {
   const storiesRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://app.vidwidget.ru/n/7c352719-e579-453f-9dfb-e5dac97bffee/';
     script.async = true;
     storiesRef.current?.appendChild(script);
-    return () => {
-      script.remove();
-    };
+    return () => { script.remove(); };
   }, []);
 
   const timeOptions: Array<{ value: 'morning' | 'day' | 'evening' | 'night'; icon: string; label: string }> = [
@@ -37,6 +46,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
   };
 
   const currentOption = timeOptions.find(opt => opt.value === timeOfDay);
+
   return (
     <div className="mb-6 animate-fade-in">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -50,7 +60,8 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
             <div id="vw_stories" ref={storiesRef} />
           </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Button
             variant="outline"
             size="sm"
@@ -61,14 +72,36 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
             <Icon name={currentOption?.icon || 'Moon'} size={16} />
             <span className="hidden sm:inline">{currentOption?.label}</span>
           </Button>
+
           <Badge variant="secondary" className="animate-pulse-glow whitespace-nowrap">
             <div className="w-2 h-2 bg-neon-orange rounded-full mr-1 sm:mr-2" />
             LIVE
           </Badge>
+
           <div className="flex items-center gap-1 text-sm">
             <Icon name="Users" size={16} />
             <span className="font-semibold">{currentTrack.listeners.toLocaleString()}</span>
           </div>
+
+          {user ? (
+            <Link to="/profile">
+              <div
+                className={`w-9 h-9 rounded-full bg-gradient-to-br ${AVATAR_COLORS[user.id % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold text-white border-2 border-primary/40 hover:border-primary transition-all cursor-pointer glow-box hover:scale-105`}
+                title={user.display_name || user.username}
+              >
+                {user.avatar_url
+                  ? <img src={user.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
+                  : (user.display_name || user.username).slice(0, 2).toUpperCase()}
+              </div>
+            </Link>
+          ) : (
+            <Link to="/login">
+              <Button size="sm" className="gradient-primary gap-1 sm:gap-2 px-2 sm:px-4">
+                <Icon name="LogIn" size={15} />
+                <span className="hidden sm:inline">Войти</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
     </div>
