@@ -95,8 +95,9 @@ const Users = () => {
               const initials = (u.display_name || u.username).slice(0, 2).toUpperCase();
               const isMe = user?.id === u.id;
               return (
-                <div key={u.id}
-                  className="flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-[hsl(var(--card))] hover:border-white/20 transition-all group">
+                <div key={u.id} className="relative flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-[hsl(var(--card))] hover:border-white/20 transition-all group cursor-pointer"
+                  onClick={() => navigate(isMe ? '/profile' : `/user/${u.id}`)}>
+
                   {/* avatar */}
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden"
                     style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
@@ -124,7 +125,7 @@ const Users = () => {
                   </div>
 
                   {/* actions */}
-                  <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                     {!isMe && user && (
                       <Link to={`/messages/${u.id}`}>
                         <button className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
