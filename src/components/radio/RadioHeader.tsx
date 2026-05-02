@@ -20,9 +20,28 @@ interface RadioHeaderProps {
   onTimeOfDayChange: (time: 'morning' | 'day' | 'evening' | 'night') => void;
 }
 
+const MESSAGES_URL = 'https://functions.poehali.dev/adbf63c4-1c95-41c1-a894-a820ce702cea';
+
 const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeaderProps) => {
   const storiesRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    const fetchUnread = () => {
+      fetch(`${MESSAGES_URL}?action=dialogs`, { headers: { 'X-Auth-Token': token } })
+        .then(r => r.json())
+        .then(d => {
+          const total = (d.dialogs || []).reduce((sum: number, dlg: { unread_count: number }) => sum + dlg.unread_count, 0);
+          setUnread(total);
+        })
+        .catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -84,8 +103,13 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </div>
 
           <Link to="/users" title="Слушатели">
-            <button className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+            <button className="relative w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
               <Icon name="Users" size={16} className="text-muted-foreground" />
+              {unread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              )}
             </button>
           </Link>
 
