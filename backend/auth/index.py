@@ -2,6 +2,8 @@ import json
 import os
 import hashlib
 import secrets
+import base64
+import boto3
 import psycopg2
 from datetime import datetime
 
@@ -153,6 +155,47 @@ def handler(event: dict, context) -> dict:
             conn.commit()
             uid, username, email, dn, au, b, fg = row
             return ok({'id': uid, 'username': username, 'email': email, 'display_name': dn, 'avatar_url': au, 'bio': b, 'favorite_genre': fg})
+
+        elif action == 'upload_avatar' and method == 'POST':
+            if not token:
+                return err(401, 'Не авторизован')
+            cur.execute(f"SELECT user_id FROM {SCHEMA}.sessions WHERE token=%s AND expires_at > NOW()", (token,))
+            row = cur.fetchone()
+            if not row:
+                return err(401, 'Сессия истекла')
+            user_id = row[0]
+
+            file_data = body.get('file')
+            content_type = body.get('content_type', 'image/jpeg')
+            if not file_data:
+                return err(400, 'Файл не передан')
+
+            allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+            if content_type not in allowed:
+                return err(400, 'Разрешены только изображения (jpg, png, webp, gif)')
+
+            image_bytes = base64.b64decode(file_data)
+            if len(image_bytes) > 5 * 1024 * 1024:
+                return err(400, 'Файл слишком большой. Максимум 5 МБ')
+
+            ext = content_type.split('/')[-1].replace('jpeg', 'jpg')
+            key = f"avatars/{user_id}_{secrets.token_hex(8)}.{ext}"
+
+            s3 = boto3.client(
+                's3',
+                endpoint_url='https://bucket.poehali.dev',
+                aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+            )
+            s3.put_object(Bucket='files', Key=key, Body=image_bytes, ContentType=content_type)
+            cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+            cur.execute(
+                f"UPDATE {SCHEMA}.users SET avatar_url=%s, updated_at=NOW() WHERE id=%s",
+                (cdn_url, user_id)
+            )
+            conn.commit()
+            return ok({'avatar_url': cdn_url})
 
         else:
             return err(404, 'Не найдено')

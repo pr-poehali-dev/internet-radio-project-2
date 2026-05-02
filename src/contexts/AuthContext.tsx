@@ -21,6 +21,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string, display_name?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Pick<User, 'display_name' | 'bio' | 'favorite_genre' | 'avatar_url'>>) => Promise<void>;
+  uploadAvatar: (file: File) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -85,8 +86,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(prev => prev ? { ...prev, ...updated } : updated);
   };
 
+  const uploadAvatar = async (file: File): Promise<string> => {
+    if (!token) throw new Error('Не авторизован');
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const data = await authFetch('upload_avatar', 'POST', { file: base64, content_type: file.type }, token);
+    setUser(prev => prev ? { ...prev, avatar_url: data.avatar_url } : prev);
+    return data.avatar_url;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateProfile, uploadAvatar }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,12 @@ const AVATAR_GRADIENTS = [
 ];
 
 const Profile = () => {
-  const { user, logout, updateProfile, loading } = useAuth();
+  const { user, logout, updateProfile, uploadAvatar, loading } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({
@@ -63,6 +65,23 @@ const Profile = () => {
   const memberSince = user.created_at
     ? new Date(user.created_at).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long' })
     : '';
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    setError('');
+    try {
+      await uploadAvatar(file);
+      setSuccess('Фото обновлено!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))] relative overflow-hidden">
@@ -116,14 +135,34 @@ const Profile = () => {
           {/* avatar row */}
           <div className="px-6 pb-6">
             <div className="flex items-end justify-between -mt-10 mb-5">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-2xl border-2 border-white/10"
+              <div className="relative group">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-2xl border-2 border-white/10 overflow-hidden"
                   style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
                   {user.avatar_url
-                    ? <img src={user.avatar_url} alt="avatar" className="w-full h-full rounded-2xl object-cover" />
+                    ? <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
                     : initials}
+                  {/* upload overlay */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl cursor-pointer"
+                  >
+                    {avatarUploading
+                      ? <Icon name="Loader2" size={20} className="text-white animate-spin" />
+                      : <Icon name="Camera" size={20} className="text-white" />}
+                    <span className="text-white text-[10px] mt-1 font-medium">
+                      {avatarUploading ? 'Загрузка...' : 'Изменить'}
+                    </span>
+                  </button>
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-[hsl(var(--card))]" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
               </div>
 
               <div className="flex gap-2 pb-1">
