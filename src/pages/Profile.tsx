@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -291,6 +291,23 @@ const Profile = () => {
             </div>
           </div>
         )}
+
+        {/* messages button */}
+        <Link to="/users">
+          <button className="w-full flex items-center justify-between px-5 py-4 rounded-2xl border border-white/10 bg-[hsl(var(--card))] hover:border-white/20 transition-all group mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${c1}30, ${c2}30)`, border: `1px solid ${c1}30` }}>
+                <Icon name="MessageCircle" size={16} style={{ color: c1 }} />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium">Сообщения</p>
+                <p className="text-xs text-muted-foreground">Написать слушателю</p>
+              </div>
+            </div>
+            <Icon name="ChevronRight" size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
+        </Link>
 
         {/* stats */}
         <div className="grid grid-cols-3 gap-3 mb-4">

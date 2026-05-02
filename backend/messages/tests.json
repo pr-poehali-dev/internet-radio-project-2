@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Unauthorized check",
+      "method": "GET",
+      "path": "/?action=dialogs",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "Не авторизован"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

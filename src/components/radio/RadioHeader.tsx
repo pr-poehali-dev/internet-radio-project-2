@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,9 +79,15 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </Badge>
 
           <div className="flex items-center gap-1 text-sm">
-            <Icon name="Users" size={16} />
+            <Icon name="Headphones" size={16} />
             <span className="font-semibold">{currentTrack.listeners.toLocaleString()}</span>
           </div>
+
+          <Link to="/users" title="Слушатели">
+            <button className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors">
+              <Icon name="Users" size={16} className="text-muted-foreground" />
+            </button>
+          </Link>
 
           {user ? (
             <Link to="/profile">
