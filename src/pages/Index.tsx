@@ -29,7 +29,7 @@ const Index = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const RADIO_URL = 'https://myradio24.org/75725';
+  const RADIO_URL = 'https://myradio24.org/64829';
 
   useEffect(() => {
     localStorage.setItem('pulse-radio-theme', timeOfDay);
