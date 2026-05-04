@@ -180,7 +180,7 @@ const RadioPlayer = ({
         <div className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Badge className="gradient-primary">{currentTrack.genre}</Badge>
-            <h2 className="text-2xl sm:text-4xl font-heading font-bold break-words">{currentTrack.title}</h2>
+
             <p className="text-base sm:text-xl text-muted-foreground">{currentTrack.artist}</p>
           </div>
 
