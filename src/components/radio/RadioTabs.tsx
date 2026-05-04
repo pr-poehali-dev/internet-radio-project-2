@@ -15,55 +15,12 @@ interface RadioTabsProps {
 
 const RadioTabs = ({ tracks, schedule, podcasts, messages }: RadioTabsProps) => {
   return (
-    <Tabs defaultValue="history" className="animate-fade-in">
-      <TabsList className="grid w-full grid-cols-4 bg-card/80 backdrop-blur-xl">
-        <TabsTrigger value="history" className="text-xs sm:text-sm px-1 sm:px-3">История</TabsTrigger>
+    <Tabs defaultValue="schedule" className="animate-fade-in">
+      <TabsList className="grid w-full grid-cols-3 bg-card/80 backdrop-blur-xl">
         <TabsTrigger value="schedule" className="text-xs sm:text-sm px-1 sm:px-3">Расписание</TabsTrigger>
         <TabsTrigger value="podcasts" className="text-xs sm:text-sm px-1 sm:px-3">Подкасты</TabsTrigger>
         <TabsTrigger value="chat" className="text-xs sm:text-sm px-1 sm:px-3">Чат</TabsTrigger>
       </TabsList>
-
-      <TabsContent value="history" className="mt-4 sm:mt-6">
-        <Card className="bg-card/80 backdrop-blur-xl border-primary/20">
-          <div className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h3 className="text-xl sm:text-2xl font-heading font-bold">История треков</h3>
-              <Button variant="outline" size="sm">
-                <Icon name="Search" size={16} className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Поиск</span>
-              </Button>
-            </div>
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-2 sm:space-y-3">
-                {tracks.map((track, index) => (
-                  <div
-                    key={track.id}
-                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-muted/50 hover:bg-muted/80 transition-all hover:scale-[1.02] cursor-pointer gap-2"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-lg bg-gradient-primary flex items-center justify-center">
-                        <Icon name="Music" size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate text-sm sm:text-base">{track.title}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{track.artist}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-6 shrink-0">
-                      <span className="hidden sm:block text-sm text-muted-foreground">{track.duration}</span>
-                      <span className="text-xs sm:text-sm text-primary font-semibold">{track.time}</span>
-                      <Button size="sm" variant="ghost" className="p-1 sm:p-2">
-                        <Icon name="MoreVertical" size={16} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </Card>
-      </TabsContent>
 
       <TabsContent value="schedule" className="mt-4 sm:mt-6">
         <Card className="bg-card/80 backdrop-blur-xl border-primary/20">
