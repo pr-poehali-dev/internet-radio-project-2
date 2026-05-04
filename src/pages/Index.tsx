@@ -4,6 +4,7 @@ import RadioHeader from '@/components/radio/RadioHeader';
 import RadioPlayer from '@/components/radio/RadioPlayer';
 import RadioTabs from '@/components/radio/RadioTabs';
 import { Track, Schedule, Podcast, Message } from '@/components/radio/types';
+import AdBanner from '@/components/radio/AdBanner';
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -169,12 +170,16 @@ const Index = () => {
           analyserRef={analyserRef}
         />
 
+        <AdBanner variant="horizontal" adIndex={0} />
+
         <RadioTabs 
           tracks={tracks}
           schedule={schedule}
           podcasts={podcasts}
           messages={messages}
         />
+
+        <AdBanner variant="horizontal" adIndex={1} />
 
         <footer className="text-center py-8 text-sm text-muted-foreground">
           <div className="flex items-center justify-center gap-6 mb-4">
