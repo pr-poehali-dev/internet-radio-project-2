@@ -81,10 +81,11 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Badge variant="secondary" className="animate-pulse-glow whitespace-nowrap">
-            <div className="w-2 h-2 bg-neon-orange rounded-full mr-1 sm:mr-2" />
-            LIVE
-          </Badge>
+          <a href="/adsefirplus">
+            <Badge variant="secondary" className="whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity">
+              Реклама
+            </Badge>
+          </a>
 
           <div className="flex items-center gap-1 text-sm">
             <Icon name="Headphones" size={16} />
