@@ -40,7 +40,7 @@ const Register = () => {
             <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center glow-box">
               <Icon name="Radio" size={22} className="text-white" />
             </div>
-            <h1 className="text-3xl font-heading font-bold glow-neon">PULSE RADIO</h1>
+            <h1 className="text-3xl font-heading font-bold glow-neon">EFIR PLUS</h1>
           </div>
           <p className="text-muted-foreground">Создайте свой аккаунт</p>
         </div>

@@ -61,7 +61,7 @@ const Users = () => {
           </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Слушатели</h1>
-            <p className="text-xs text-muted-foreground">Все участники Pulse Radio</p>
+            <p className="text-xs text-muted-foreground">Все участники Efir Plus</p>
           </div>
         </div>
 

@@ -109,7 +109,7 @@ const Profile = () => {
             <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
               <Icon name="Radio" size={13} className="text-white" />
             </div>
-            <span className="font-heading font-bold text-sm tracking-widest" style={{ color: c1 }}>PULSE RADIO</span>
+            <span className="font-heading font-bold text-sm tracking-widest" style={{ color: c1 }}>EFIR PLUS</span>
           </div>
         </div>
 

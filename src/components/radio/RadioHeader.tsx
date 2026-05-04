@@ -74,7 +74,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
             <Icon name="Radio" size={20} className="text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-3xl font-heading font-bold glow-neon truncate">PULSE RADIO</h1>
+            <h1 className="text-xl sm:text-3xl font-heading font-bold glow-neon truncate">EFIR PLUS</h1>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">Non-stop electronic beats</p>
             <div id="vw_stories" ref={storiesRef} />
           </div>

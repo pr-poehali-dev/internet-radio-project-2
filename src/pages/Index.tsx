@@ -183,7 +183,7 @@ const Index = () => {
             <Button variant="ghost" size="sm">Реклама</Button>
             <Button variant="ghost" size="sm">API</Button>
           </div>
-          <p>© 2024 Pulse Radio. Все права защищены.</p>
+          <p>© 2025 Efir Plus. Все права защищены.</p>
         </footer>
       </div>
     </div>
