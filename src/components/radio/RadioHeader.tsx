@@ -81,17 +81,6 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={cycleTimeOfDay}
-            className="gap-1 sm:gap-2 hover:scale-105 transition-transform px-2 sm:px-3"
-            title="Сменить цветовую схему"
-          >
-            <Icon name={currentOption?.icon || 'Moon'} size={16} />
-            <span className="hidden sm:inline">{currentOption?.label}</span>
-          </Button>
-
           <Badge variant="secondary" className="animate-pulse-glow whitespace-nowrap">
             <div className="w-2 h-2 bg-neon-orange rounded-full mr-1 sm:mr-2" />
             LIVE
