@@ -17,29 +17,31 @@ interface RadioPlayerProps {
   analyserRef: React.MutableRefObject<AnalyserNode | null>;
 }
 
-const TIME_COLORS = {
-  morning: ['#ff9a3c', '#ffcc70', '#ff6b6b', '#ffd93d'],
-  day:     ['#00d2ff', '#3a7bd5', '#00c9ff', '#92fe9d'],
-  evening: ['#ff6b35', '#f7c59f', '#ff4757', '#ff6348'],
-  night:   ['#a855f7', '#6366f1', '#ec4899', '#8b5cf6'],
+const TIME_WAVE_COLORS = {
+  morning: [['#ff9a3c', '#ffcc70'], ['#ff6b6b', '#ffd93d'], ['#ffaa44', '#ff8c00']],
+  day:     [['#00d2ff', '#3a7bd5'], ['#00c9ff', '#92fe9d'], ['#0088cc', '#00cc88']],
+  evening: [['#ff6b35', '#f7c59f'], ['#ff4757', '#ff6348'], ['#cc3300', '#ff7755']],
+  night:   [['#a855f7', '#6366f1'], ['#ec4899', '#8b5cf6'], ['#7c3aed', '#db2777']],
 };
 
-const WaveCircle = ({
+const WaveBanner = ({
   isPlaying,
   audioData,
   analyserRef,
   timeOfDay,
+  currentTrack,
+  togglePlay,
 }: {
   isPlaying: boolean;
   audioData: number[];
   analyserRef: React.MutableRefObject<AnalyserNode | null>;
-  timeOfDay: keyof typeof TIME_COLORS;
+  timeOfDay: keyof typeof TIME_WAVE_COLORS;
+  currentTrack: CurrentTrack;
+  togglePlay: () => void;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const phaseRef = useRef(0);
-  const rippleRef = useRef<{ r: number; alpha: number }[]>([]);
-  const lastRmsRef = useRef(0);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -49,10 +51,7 @@ const WaveCircle = ({
 
     const W = canvas.width;
     const H = canvas.height;
-    const cx = W / 2;
-    const cy = H / 2;
-    const maxR = Math.min(cx, cy) - 4;
-    const colors = TIME_COLORS[timeOfDay];
+    const colors = TIME_WAVE_COLORS[timeOfDay];
 
     ctx.clearRect(0, 0, W, H);
 
@@ -60,91 +59,47 @@ const WaveCircle = ({
     if (analyserRef.current && isPlaying) {
       const buf = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(buf);
-      const sum = buf.reduce((a, b) => a + b, 0);
-      rms = sum / buf.length / 255;
+      rms = buf.reduce((a, b) => a + b, 0) / buf.length / 255;
     } else if (isPlaying && audioData.length) {
       rms = audioData.reduce((a, b) => a + b, 0) / audioData.length;
     }
 
-    if (isPlaying && rms - lastRmsRef.current > 0.18) {
-      rippleRef.current.push({ r: maxR * 0.55, alpha: 0.7 });
-    }
-    lastRmsRef.current = rms;
+    const phase = phaseRef.current;
+    const amp = isPlaying ? H * (0.18 + rms * 0.18) : H * 0.12;
 
-    rippleRef.current = rippleRef.current
-      .map(rp => ({ r: rp.r + 1.8, alpha: rp.alpha - 0.012 }))
-      .filter(rp => rp.alpha > 0);
+    const waveDefs = [
+      { yBase: H * 0.35, amp: amp * 1.1, freq: 1.4, phaseShift: 0,      alpha: 0.85, colors: colors[0] },
+      { yBase: H * 0.55, amp: amp * 0.9, freq: 1.8, phaseShift: 1.2,    alpha: 0.75, colors: colors[1] },
+      { yBase: H * 0.72, amp: amp * 1.3, freq: 1.1, phaseShift: 2.5,    alpha: 0.65, colors: colors[2] },
+    ];
 
-    rippleRef.current.forEach(rp => {
+    waveDefs.forEach(({ yBase, amp: wAmp, freq, phaseShift, alpha, colors: wColors }) => {
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0, wColors[0] + 'cc');
+      grad.addColorStop(0.5, wColors[1] + 'dd');
+      grad.addColorStop(1, wColors[0] + 'cc');
+
       ctx.beginPath();
-      ctx.arc(cx, cy, rp.r, 0, Math.PI * 2);
-      ctx.strokeStyle = `${colors[0]}${Math.round(rp.alpha * 255).toString(16).padStart(2, '0')}`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.moveTo(0, H);
+
+      for (let x = 0; x <= W; x += 4) {
+        const t = x / W;
+        const y = yBase
+          + Math.sin(t * Math.PI * 2 * freq + phase + phaseShift) * wAmp
+          + Math.sin(t * Math.PI * 3.3 * freq - phase * 0.7 + phaseShift) * wAmp * 0.4
+          + Math.cos(t * Math.PI * 1.6 * freq + phase * 0.5) * wAmp * 0.25;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.globalAlpha = 1;
     });
 
-    const BARS = 120;
-    const baseR = maxR * 0.52;
-    const phase = phaseRef.current;
-
-    for (let i = 0; i < BARS; i++) {
-      const angle = (i / BARS) * Math.PI * 2 - Math.PI / 2;
-      const dataIdx = Math.floor((i / BARS) * audioData.length);
-      const audioLevel = isPlaying ? (audioData[dataIdx] || 0) : 0;
-
-      const wave1 = Math.sin(angle * 3 + phase) * 0.15;
-      const wave2 = Math.cos(angle * 5 - phase * 1.3) * 0.08;
-      const wave3 = Math.sin(angle * 2 + phase * 0.7) * 0.06;
-
-      const barLen = isPlaying
-        ? (maxR - baseR) * (0.15 + audioLevel * 0.72 + wave1 + wave2 + wave3)
-        : (maxR - baseR) * (0.05 + wave1 * 0.3 + 0.04);
-
-      const x1 = cx + Math.cos(angle) * baseR;
-      const y1 = cy + Math.sin(angle) * baseR;
-      const x2 = cx + Math.cos(angle) * (baseR + barLen);
-      const y2 = cy + Math.sin(angle) * (baseR + barLen);
-
-      const colorIdx = Math.floor((i / BARS) * colors.length);
-      const colorNext = colors[(colorIdx + 1) % colors.length];
-      const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-      grad.addColorStop(0, colors[colorIdx] + 'aa');
-      grad.addColorStop(1, colorNext + 'ff');
-
-      const glow = isPlaying ? 0.6 + audioLevel * 0.4 : 0.25;
-      ctx.save();
-      ctx.shadowColor = colors[colorIdx];
-      ctx.shadowBlur = isPlaying ? 8 + audioLevel * 18 : 3;
-      ctx.globalAlpha = glow;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = isPlaying ? 1.5 + audioLevel * 1.5 : 1;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR);
-    innerGrad.addColorStop(0, colors[0] + (isPlaying ? '22' : '0a'));
-    innerGrad.addColorStop(0.6, colors[2] + (isPlaying ? '18' : '08'));
-    innerGrad.addColorStop(1, 'transparent');
-    ctx.beginPath();
-    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
-    ctx.fillStyle = innerGrad;
-    ctx.fill();
-
-    if (isPlaying) {
-      const pulseR = baseR * (0.85 + rms * 0.15);
-      ctx.beginPath();
-      ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
-      ctx.strokeStyle = colors[1] + '55';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
-
-    phaseRef.current += isPlaying ? 0.025 : 0.006;
+    phaseRef.current += isPlaying ? 0.022 + rms * 0.03 : 0.007;
     rafRef.current = requestAnimationFrame(draw);
   }, [isPlaying, audioData, analyserRef, timeOfDay]);
 
@@ -154,13 +109,30 @@ const WaveCircle = ({
   }, [draw]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={280}
-      height={280}
-      className="w-full h-full rounded-full"
-      style={{ display: 'block' }}
-    />
+    <div className="relative w-full overflow-hidden rounded-2xl" style={{ height: 220 }}>
+      <canvas
+        ref={canvasRef}
+        width={900}
+        height={220}
+        className="absolute inset-0 w-full h-full"
+        style={{ display: 'block' }}
+      />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
+        <button
+          onClick={togglePlay}
+          className="pointer-events-auto w-14 h-14 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          style={{ backdropFilter: 'blur(4px)' }}
+        >
+          <Icon name={isPlaying ? 'Pause' : 'Play'} size={26} className="text-gray-800 ml-0.5" />
+        </button>
+        {isPlaying && (
+          <div className="text-center mt-1 drop-shadow-lg">
+            <p className="text-white font-semibold text-sm leading-tight">{currentTrack.title || currentTrack.genre}</p>
+            <p className="text-white/80 text-xs">{currentTrack.artist}</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -176,77 +148,41 @@ const RadioPlayer = ({
 }: RadioPlayerProps) => {
   return (
     <Card className="bg-card/80 backdrop-blur-xl border-primary/20 p-4 sm:p-8 animate-fade-in glow-box">
-      <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
-        <div className="space-y-4 sm:space-y-6">
-          <div className="space-y-2">
+      <div className="space-y-6">
+        <WaveBanner
+          isPlaying={isPlaying}
+          audioData={audioData}
+          analyserRef={analyserRef}
+          timeOfDay={timeOfDay}
+          currentTrack={currentTrack}
+          togglePlay={togglePlay}
+        />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
             <Badge className="gradient-primary">{currentTrack.genre}</Badge>
-
-            <p className="text-base sm:text-xl text-muted-foreground">{currentTrack.artist}</p>
+            <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
           </div>
-
-          <div className="flex items-center gap-3 pt-2 sm:pt-4">
-            <Button 
-              size="lg" 
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full gradient-primary glow-box hover:scale-110 transition-transform shrink-0"
-              onClick={togglePlay}
-            >
-              <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="rounded-full">
+              <Icon name="Heart" size={18} />
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full">
-              <Icon name="Heart" size={20} />
+            <Button size="sm" variant="outline" className="rounded-full">
+              <Icon name="Share2" size={18} />
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full">
-              <Icon name="Share2" size={20} />
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Icon name="Volume2" size={20} className="text-primary shrink-0" />
-              <Slider 
-                value={volume} 
-                onValueChange={setVolume}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-sm font-semibold w-10 text-right shrink-0">{volume[0]}%</span>
-            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-center">
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72">
-            <div className="absolute inset-0 rounded-full bg-card/60 backdrop-blur-xl border border-primary/20" />
-            <div className="absolute inset-0 rounded-full overflow-hidden">
-              <WaveCircle
-                isPlaying={isPlaying}
-                audioData={audioData}
-                analyserRef={analyserRef}
-                timeOfDay={timeOfDay}
-              />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div
-                  className={`text-5xl sm:text-6xl font-heading font-bold transition-all duration-500 select-none ${
-                    isPlaying ? 'glow-neon scale-110' : 'opacity-40 scale-100'
-                  }`}
-                  style={{ animation: isPlaying ? 'float-rotate 8s ease-in-out infinite' : 'none' }}
-                >
-                  {isPlaying ? '♪' : '♫'}
-                </div>
-                {isPlaying && (
-                  <div
-                    className="mt-2 text-xs font-semibold text-primary tracking-widest"
-                    style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}
-                  >
-                    ON AIR
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <Icon name="Volume2" size={20} className="text-primary shrink-0" />
+          <Slider 
+            value={volume} 
+            onValueChange={setVolume}
+            max={100}
+            step={1}
+            className="flex-1"
+          />
+          <span className="text-sm font-semibold w-10 text-right shrink-0">{volume[0]}%</span>
         </div>
       </div>
     </Card>
