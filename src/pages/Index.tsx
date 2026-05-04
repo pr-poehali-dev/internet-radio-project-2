@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import RadioHeader from '@/components/radio/RadioHeader';
 import RadioPlayer from '@/components/radio/RadioPlayer';
@@ -185,7 +186,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-6 mb-4">
             <Button variant="ghost" size="sm">О нас</Button>
             <Button variant="ghost" size="sm">Контакты</Button>
-            <Button variant="ghost" size="sm">Реклама</Button>
+            <Link to="/adsefirplus"><Button variant="ghost" size="sm">Реклама</Button></Link>
             <Button variant="ghost" size="sm">API</Button>
           </div>
           <p>© 2025 Efir Plus. Все права защищены.</p>

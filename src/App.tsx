@@ -12,6 +12,7 @@ import Users from "./pages/Users";
 import Messages from "./pages/Messages";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
+import AdsEfirPlus from "./pages/AdsEfirPlus";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/users" element={<Users />} />
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/messages/:userId" element={<Messages />} />
+            <Route path="/adsefirplus" element={<AdsEfirPlus />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
