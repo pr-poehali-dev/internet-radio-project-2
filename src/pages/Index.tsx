@@ -119,7 +119,7 @@ const Index = () => {
   const currentTrack = {
     title: 'Summer Vibes 2024',
     artist: 'DJ Neon',
-    genre: 'Progressive House',
+    genre: 'Хиты и только хиты',
     listeners: 2847
   };
 
