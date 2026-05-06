@@ -70,12 +70,22 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
     <div className="mb-6 animate-fade-in">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-gradient-primary flex items-center justify-center glow-box">
-            <Icon name="Radio" size={20} className="text-white" />
+          <div className="relative shrink-0 w-11 h-11 sm:w-14 sm:h-14">
+            <div className="absolute inset-0 rounded-2xl gradient-primary glow-box opacity-90" />
+            <div className="absolute inset-0 rounded-2xl flex items-center justify-center">
+              <Icon name="Radio" size={22} className="text-white drop-shadow" />
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-background shadow" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-3xl font-heading font-bold glow-neon truncate">EFIR PLUS</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">Только музыка и ничего лишнего</p>
+            <div className="flex items-baseline gap-1.5">
+              <h1 className="text-xl sm:text-2xl font-heading font-extrabold tracking-tight leading-none truncate">
+                <span className="glow-neon">EFIR</span>
+                <span className="text-white/90"> PLUS</span>
+              </h1>
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-primary/20 border border-primary/30 text-[9px] font-bold text-primary tracking-widest uppercase leading-none">LIVE</span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-muted-foreground truncate mt-0.5">Только музыка и ничего лишнего</p>
             <div id="vw_stories" ref={storiesRef} />
           </div>
         </div>
