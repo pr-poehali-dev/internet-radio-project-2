@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 
 const FORMATS = [
@@ -80,9 +85,126 @@ const FAQ = [
   },
 ];
 
+const AdRequestModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+  const [form, setForm] = useState({ name: '', contact: '', company: '', format: '', description: '', budget: '' });
+  const [sent, setSent] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = encodeURIComponent(
+      `Имя: ${form.name}\nКонтакт: ${form.contact}\nКомпания: ${form.company}\nФормат: ${form.format}\nБюджет: ${form.budget}\n\nОписание:\n${form.description}`
+    );
+    window.location.href = `mailto:ads@efirplus.ru?subject=Заявка на рекламу&body=${body}`;
+    setSent(true);
+  };
+
+  const handleClose = () => {
+    setSent(false);
+    setForm({ name: '', contact: '', company: '', format: '', description: '', budget: '' });
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="bg-card border-primary/20 max-w-lg w-full">
+        <DialogHeader>
+          <DialogTitle className="font-heading text-xl">Оставить заявку на рекламу</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm">
+            Расскажите о своей рекламе — мы свяжемся с вами в течение рабочего дня.
+          </DialogDescription>
+        </DialogHeader>
+
+        {sent ? (
+          <div className="flex flex-col items-center gap-4 py-8 text-center">
+            <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center glow-box">
+              <Icon name="CheckCheck" size={30} className="text-white" />
+            </div>
+            <p className="font-heading font-bold text-lg">Заявка отправлена!</p>
+            <p className="text-sm text-muted-foreground">Откроется ваш почтовый клиент. Мы ответим в ближайшее время.</p>
+            <Button onClick={handleClose} className="gradient-primary glow-box mt-2">Закрыть</Button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Ваше имя *</Label>
+                <Input id="name" name="name" required placeholder="Иван Иванов" value={form.name} onChange={handleChange} className="bg-background/60 border-primary/20 focus:border-primary" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="contact">Телефон или Telegram *</Label>
+                <Input id="contact" name="contact" required placeholder="+7 900 000-00-00" value={form.contact} onChange={handleChange} className="bg-background/60 border-primary/20 focus:border-primary" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="company">Компания / бренд</Label>
+                <Input id="company" name="company" placeholder="Название бренда" value={form.company} onChange={handleChange} className="bg-background/60 border-primary/20 focus:border-primary" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="format">Формат рекламы</Label>
+                <select
+                  id="format"
+                  name="format"
+                  value={form.format}
+                  onChange={handleChange}
+                  className="w-full h-10 rounded-md border border-primary/20 bg-background/60 px-3 text-sm focus:outline-none focus:border-primary text-foreground"
+                >
+                  <option value="">Выберите формат</option>
+                  <option>Аудиоролик в эфире</option>
+                  <option>Баннер на сайте</option>
+                  <option>Спонсорство шоу</option>
+                  <option>Спецпроект</option>
+                  <option>Не определился</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="budget">Бюджет</Label>
+              <Input id="budget" name="budget" placeholder="например: до 10 000 ₽" value={form.budget} onChange={handleChange} className="bg-background/60 border-primary/20 focus:border-primary" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="description">Описание рекламы *</Label>
+              <Textarea
+                id="description"
+                name="description"
+                required
+                placeholder="Расскажите о вашем продукте, целевой аудитории, что хотите донести слушателям, есть ли готовый ролик или текст..."
+                value={form.description}
+                onChange={handleChange}
+                rows={5}
+                className="bg-background/60 border-primary/20 focus:border-primary resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" onClick={handleClose} className="border-primary/30 flex-1">
+                Отмена
+              </Button>
+              <Button type="submit" className="gradient-primary glow-box flex-1">
+                <Icon name="Send" size={15} className="mr-2" />
+                Отправить заявку
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const AdsEfirPlus = () => {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      <AdRequestModal open={modalOpen} onClose={() => setModalOpen(false)} />
       <div className="container mx-auto px-4 py-8 max-w-5xl space-y-12">
 
         {/* Шапка */}
@@ -112,12 +234,10 @@ const AdsEfirPlus = () => {
             Efir Plus — онлайн-радио с живой, вовлечённой аудиторией. Мы помогаем брендам и малому бизнесу говорить с людьми там, где они реально проводят время.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <a href="mailto:ads@efirplus.ru">
-              <Button className="gradient-primary glow-box w-full sm:w-auto px-8">
-                <Icon name="Mail" size={16} className="mr-2" />
-                Оставить заявку
-              </Button>
-            </a>
+            <Button onClick={() => setModalOpen(true)} className="gradient-primary glow-box w-full sm:w-auto px-8">
+              <Icon name="Mail" size={16} className="mr-2" />
+              Оставить заявку
+            </Button>
             <a href="tel:+78001234567">
               <Button variant="outline" className="border-primary/30 hover:border-primary w-full sm:w-auto px-8">
                 <Icon name="Phone" size={16} className="mr-2" />
@@ -163,11 +283,9 @@ const AdsEfirPlus = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed flex-1">{f.description}</p>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-lg font-heading font-bold text-primary">{f.price}</span>
-                  <a href="mailto:ads@efirplus.ru">
-                    <Button size="sm" variant="outline" className="border-primary/30 hover:border-primary text-xs">
-                      Заказать
-                    </Button>
-                  </a>
+                  <Button size="sm" variant="outline" className="border-primary/30 hover:border-primary text-xs" onClick={() => setModalOpen(true)}>
+                    Заказать
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -225,12 +343,10 @@ const AdsEfirPlus = () => {
             Напишите нам — обсудим задачу, подберём формат и запустим кампанию уже на этой неделе.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <a href="mailto:ads@efirplus.ru">
-              <Button className="gradient-primary glow-box w-full sm:w-auto px-8">
-                <Icon name="Mail" size={16} className="mr-2" />
-                ads@efirplus.ru
-              </Button>
-            </a>
+            <Button onClick={() => setModalOpen(true)} className="gradient-primary glow-box w-full sm:w-auto px-8">
+              <Icon name="Mail" size={16} className="mr-2" />
+              Оставить заявку
+            </Button>
             <a href="https://t.me/efirplus_ads" target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="border-primary/30 hover:border-primary w-full sm:w-auto px-8">
                 <Icon name="Send" size={16} className="mr-2" />
