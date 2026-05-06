@@ -131,12 +131,24 @@ const Index = () => {
     { id: 5, title: 'Bass Drop', artist: 'Frequency', time: '23:23', duration: '4:55' },
   ];
 
-  const schedule: Schedule[] = [
-    { id: 1, time: '22:00 - 00:00', dj: 'DJ Neon', genre: 'Progressive House', isLive: true },
-    { id: 2, time: '00:00 - 02:00', dj: 'Sound Wave', genre: 'Techno', isLive: false },
-    { id: 3, time: '02:00 - 04:00', dj: 'Beat Master', genre: 'Deep House', isLive: false },
-    { id: 4, time: '04:00 - 06:00', dj: 'DJ Storm', genre: 'Trance', isLive: false },
+  const getUralHour = () => {
+    const now = new Date();
+    return (now.getUTCHours() + 5) % 24;
+  };
+
+  const uralHour = getUralHour();
+
+  const SCHEDULE_SLOTS = [
+    { id: 1, time: '22:00 - 00:00', dj: 'DJ Neon', genre: 'Progressive House', startH: 22, endH: 24 },
+    { id: 2, time: '00:00 - 02:00', dj: 'Sound Wave', genre: 'Techno', startH: 0, endH: 2 },
+    { id: 3, time: '02:00 - 04:00', dj: 'Beat Master', genre: 'Deep House', startH: 2, endH: 4 },
+    { id: 4, time: '04:00 - 06:00', dj: 'DJ Storm', genre: 'Trance', startH: 4, endH: 6 },
   ];
+
+  const schedule: Schedule[] = SCHEDULE_SLOTS.map(({ startH, endH, ...slot }) => ({
+    ...slot,
+    isLive: uralHour >= startH && uralHour < endH,
+  }));
 
   const podcasts: Podcast[] = [
     { id: 1, title: 'Best of 2024', episode: 'Episode 42', duration: '58:30', plays: '12.5K' },
