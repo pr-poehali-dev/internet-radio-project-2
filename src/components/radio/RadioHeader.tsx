@@ -75,7 +75,7 @@ const RadioHeader = ({ currentTrack, timeOfDay, onTimeOfDayChange }: RadioHeader
           </div>
           <div className="min-w-0">
             <h1 className="text-xl sm:text-3xl font-heading font-bold glow-neon truncate">EFIR PLUS</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">Non-stop electronic beats</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Только музыка и ничего лишнего</p>
             <div id="vw_stories" ref={storiesRef} />
           </div>
         </div>
